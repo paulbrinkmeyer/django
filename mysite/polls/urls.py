@@ -7,8 +7,11 @@ from . import views
 urlpatterns = [
     # ex: /polls/
     path('', views.index, name='index'),
+    path('index_long_method/', views.index_long_method, name='index_long_method'),
+    path('index1/', views.index1, name='index1'),
     # ex: /polls/5/
     path('<int:question_id>/', views.detail, name='detail'),
+    path('detail_long_method/<int:question_id>/', views.detail_long_method, name='detail_long_method'),
     # ex: /polls/5/results/
     path('<int:question_id>/results/', views.results, name='results'),
     # ex: /polls/5/vote/
