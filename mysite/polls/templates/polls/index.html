@@ -1,7 +1,18 @@
 {% if latest_question_list %}
     <ul>
     {% for question in latest_question_list %}
+        {% comment %}
+        <!-- hardcoding the url method -->
         <li><a href="/polls/{{ question.id }}/">{{ question.question_text }}</a></li>
+        {% endcomment %}
+
+        {% comment %}
+        <!-- this could be used if app_name was not defined in polls/urls.py -->
+        <li><a href="{% url 'detail' question.id %}">{{ question.question_text }}</a></li>
+        {% endcomment %}
+
+        <!-- this can be used because app_name=polls in polls/urls.py -->
+        <li><a href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a></li>
     {% endfor %}
     </ul>
 {% else %}

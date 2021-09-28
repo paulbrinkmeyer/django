@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'games.apps.GamesConfig',
     'polls.apps.PollsConfig',
     'first_app.apps.FirstAppConfig',
     'django.contrib.admin',
