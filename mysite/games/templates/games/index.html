@@ -7,24 +7,20 @@
 <body>
     <a href="{% url 'games:submit' %}">Submit</a> a game.
     <a href="{% url 'games:settings' %}">Settings</a></br>
-    <table>
-        <tr>
-            <td>
-                <label id="unhide_cols">Unhide columns:</label>
-            </td>
+    <table><tr>
+        <td>
+            <label id="unhide_cols">Unhide columns:</label>
+        </td>
 
-            {% for field in fields_hidden %}
-                <td>
-                    <form action="{% url 'games:settings' %}" method="post" style="margin: 0px;">
-                        {% csrf_token %}
-                        <input type="hidden" name="show_{{ field }}" value="true">
-                        <input type="submit" value="{{ field | title }}">
-                    </form>
-                </td>
-            {% endfor %}
+        {% for field in fields_hidden %}
+            <td><form action="{% url 'games:settings' %}" method="post" style="margin: 0px;">
+                {% csrf_token %}
+                <input type="hidden" name="show_{{ field }}" value="true">
+                <input type="submit" value="{{ field | title }}">
+            </form></td>
+        {% endfor %}
 
-        </tr>
-    </table>
+    </tr></table>
     
     <table border=1>
         <tr>
@@ -35,11 +31,25 @@
 
                         {% if header.hide_button_show %}
                             <br>
-                            <form action="{% url 'games:settings' %}" method="post" style="margin: 0px;">
-                                {% csrf_token %}
-                                <input type="hidden" name="show_{{ header.title | lower }}" value="false">
-                                <input type="submit" value="Hide">
-                            </form>
+                            <table><tr>
+                                <td><form action="{% url 'games:settings' %}" method="post" style="margin: 0px;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="sort_by" value="{{ header.title | lower }}">
+                                    <input type="hidden" name="sort_reverse" value="false">
+                                    <input type="submit" value="v">
+                                </form></td>
+                                <td><form action="{% url 'games:settings' %}" method="post" style="margin: 0px;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="sort_by" value="{{ header.title | lower }}">
+                                    <input type="hidden" name="sort_reverse" value="true">
+                                    <input type="submit" value="^">
+                                </form></td>
+                                <td><form action="{% url 'games:settings' %}" method="post" style="margin: 0px;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="show_{{ header.title | lower }}" value="false">
+                                    <input type="submit" value="Hide">
+                                </form></td>
+                            </tr></table>
                         {% endif %}
                     </td>
                 {% endif %}

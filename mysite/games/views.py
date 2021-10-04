@@ -136,9 +136,19 @@ def _settings_get():
 def _settings_post(request):
     settings = _settings_get()
     settings_fields = _fields_get(Settings)
+    print(request.POST)
     for field in settings_fields:
         if field in request.POST:
-            if request.POST[field].lower() == "true":
+            if field == "sort_by":
+                settings.sort_by = request.POST["sort_by"]
+            elif field == "sort_reverse":
+                if request.POST["sort_reverse"].lower() == "true":
+                    print("sort_reverse is true")
+                    settings.sort_reverse = True
+                elif request.POST["sort_reverse"].lower() == "false":
+                    print("sort_reverse is false")
+                    settings.sort_reverse = False
+            elif request.POST[field].lower() == "true":
                 setattr(settings, field, True)
             else:
                 setattr(settings, field, False)
@@ -164,7 +174,7 @@ def _generate_table(model, never_show_fields=[], sort_by="title"):
     """
     model_list = model.objects.all()
     field_list = _fieds_visible()
-
+    settings = _settings_get()
     fields_visible_always = _fields_visible_always()
 
     # remove fields to never show
@@ -179,8 +189,6 @@ def _generate_table(model, never_show_fields=[], sort_by="title"):
         title_attributes["hide_button_show"] = not field in fields_visible_always
         header_list.append(copy.deepcopy(title_attributes))
 
-    #print(header_list)
-
     # add all the rows
     table = []
     for model_instance in model_list:
@@ -191,11 +199,11 @@ def _generate_table(model, never_show_fields=[], sort_by="title"):
 
     # sort the table
     if sort_by in field_list:
-        sort_by_index = field_list.index(sort_by)
-        table = sorted(table, key=lambda col: col[sort_by_index])
+        i = field_list.index(sort_by)
+        # ref for this magic: https://stackoverflow.com/questions/18411560/sort-list-while-pushing-none-values-to-the-end
+        table = sorted(table, key=lambda col: (col[i] is None, col[i]), reverse=settings.sort_reverse)
 
     table = [header_list] + table
-
     return table
 
 
@@ -222,6 +230,7 @@ def settings(request):
         response = _settings_post(request)
     else:
         context = {
+            "field_list": _fields_get(Game),
             "settings": _settings_get(),
             "fields_hideable_settings": _fields_hideable_settings()
         }

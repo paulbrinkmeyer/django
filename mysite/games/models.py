@@ -14,6 +14,7 @@ class Game(models.Model):
 
 class Settings(models.Model):
     sort_by = models.CharField(max_length=200, default="title")
+    sort_reverse = models.BooleanField(default=True)
     show_id = models.BooleanField(default=True)
     show_title = models.BooleanField(default=True)
     show_provider = models.BooleanField(default=True)
