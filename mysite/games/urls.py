@@ -8,7 +8,8 @@ app_name = 'games' # this is useful for template URL namespaces
 
 urlpatterns = [
     # ex: /games/
-    path('',              views.index,  name='index'),
-    path('submit',        views.submit, name='submit'),
-    path('<int:game_id>', views.detail, name='detail'),
+    path('',              views.index,    name='index'),
+    path('settings',      views.settings, name='settings'),
+    path('submit',        views.submit,   name='submit'),
+    path('<int:game_id>', views.detail,   name='detail'),
 ]

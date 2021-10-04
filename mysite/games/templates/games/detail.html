@@ -1,18 +1,23 @@
 <html>
 <body>
     <a href={% url 'games:index' %}>Home</a><br>
-    ID={{ game_id }}
+    ID={{ game.id }}
     <table border=1>
         <tr>
             <th>Title</th>
             <th>Provider</th>
             <th>Platform</th>
         </tr>
-        <tr>
-            <td>TBD title</td>
-            <td>TBD provider</td>
-            <td>TBD platform</td>
-        </tr>
+        <form action="{% url 'games:detail' game.id %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="id" value="{{ game.id }}" />
+            <tr>
+                <td><input type="text" id="title" name="title" required value="{{ game.title }}"></td>
+                <td><input type="text" id="provider" name="provider" required value="{{ game.provider }}"></td>
+                <td><input type="text" id="platform" name="platform" required value="{{ game.platform }}"></td>
+                <td><input type="submit" value="Save changes"></td>
+            </tr>
+        </form>
     </table>
 
 </body>

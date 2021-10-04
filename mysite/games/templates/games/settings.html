@@ -1,0 +1,25 @@
+<html>
+    <title>TBD Title</title>
+<body>
+    <a href={% url 'games:index' %}>Home</a><br>
+    <form action="{% url 'games:settings' %}" method="post">
+    {% csrf_token %}
+    <table>
+        {% for field in fields_hideable_settings %}
+            <tr>
+                <td>show {{ field.field_name }}</td>
+                <td>
+                    <input type="hidden" name="missing_means_unchecked">
+                    <input type="checkbox"
+                           name="show_{{ field.field_name }}"
+                           id="show_{{ field.field_name }}"
+                           value="true"
+                           {% if field.field_show  %} checked {% endif %}>
+                </td>
+            </tr>
+         {% endfor %}
+    </table>
+    <input type="submit" value="Save changes">
+    </form>
+</body>
+</html>

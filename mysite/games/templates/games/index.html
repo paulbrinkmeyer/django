@@ -1,27 +1,59 @@
+<!DOCTYPE html>
 <html>
+<head>
+    <meta charset="utf-8">
+    <title>TBD Title</title>
+</head>
 <body>
-    <h1>Games List</h1>
     <a href="{% url 'games:submit' %}">Submit</a> a game.
-    {% if games_list %}
-        <ul>
-        {% for game in games_list %}
-            {% comment %}
-            <!-- hardcoding the url method --> 
-            <li><a href="/games/{{ game.id }}/">{{ game.title }}</a></li>
-            {% endcomment %}
+    <a href="{% url 'games:settings' %}">Settings</a></br>
+    <table>
+        <tr>
+            <td>
+                <label id="unhide_cols">Unhide columns:</label>
+            </td>
 
-            {% comment %}         
-            <!-- this could be used if app_name was not defined in games/urls.py --> 
-            <li><a href="{% url 'detail' game.id %}">{{ game.title }}</a></li>
-            {% endcomment %}
+            {% for field in fields_hidden %}
+                <td>
+                    <form action="{% url 'games:settings' %}" method="post" style="margin: 0px;">
+                        {% csrf_token %}
+                        <input type="hidden" name="show_{{ field }}" value="true">
+                        <input type="submit" value="{{ field | title }}">
+                    </form>
+                </td>
+            {% endfor %}
 
-            <!-- this can be used because app_name=polls in polls/urls.py -->
-            <li><a href="{% url 'games:detail' game.id %}">{{ game.title }}</a></li>
-        {% endfor %}
-        </ul>
-    {% else %}
-        <p>No Games are available.</p>
-    {% endif %}
+        </tr>
+    </table>
     
+    <table border=1>
+        <tr>
+            {% for header in table.0 %}
+                {% if header %}
+                    <td>
+                        <b>{{ header.title }}</b>
+
+                        {% if header.hide_button_show %}
+                            <br>
+                            <form action="{% url 'games:settings' %}" method="post" style="margin: 0px;">
+                                {% csrf_token %}
+                                <input type="hidden" name="show_{{ header.title | lower }}" value="false">
+                                <input type="submit" value="Hide">
+                            </form>
+                        {% endif %}
+                    </td>
+                {% endif %}
+            {% endfor %}
+        </tr>
+        {% for row in table %}
+            {% if not forloop.first %}
+                <tr>
+                    {% for field in row %}
+                        <td>{{ field }}</td>
+                    {% endfor %}
+                </tr>
+            {% endif %}
+        {% endfor %}
+    </table>
 </body>
 </html>
