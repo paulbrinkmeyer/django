@@ -1,4 +1,5 @@
 import copy
+import json
 
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
@@ -14,7 +15,7 @@ def _fields_get(model_instance):
     return field_list
 
 
-def _fieds_visible():
+def _fields_visible():
     fields = _fields_get(Game)
     settings = _settings_get()
 
@@ -29,7 +30,7 @@ def _fieds_visible():
 
 
 def _fields_visible_always():
-    return_list = []
+    return_list = ["id"]
     for field in FieldVisibleAlways.objects.all():
         return_list.append(field.name)
     return return_list
@@ -93,20 +94,33 @@ def _fields_hideable_settings():
 
 
 def _detail_post(request):
-    if "id" in request.POST:
-        print("requested id is " + request.POST["id"])
-    if "title" in request.POST:
-        print("requested title is " + request.POST["title"])
-    if "provider" in request.POST:
-        print("requested provider is " + request.POST["provider"])
-    if "platform" in request.POST:
-        print("requested platform is " + request.POST["platform"])
-    game = Game.objects.get(pk=request.POST["id"])
-    game.title = request.POST["title"]
-    game.provider = request.POST["provider"]
-    game.platform = request.POST["platform"]
-    game.save()
-    return HttpResponseRedirect(reverse('games:detail', args=(request.POST["id"],)))
+    id = None
+
+    if request.POST:
+        body = request.POST
+    elif request.body:
+        body = json.loads(request.body)
+    else:
+        body = {}
+
+    print("body=" + str(body))
+    id = body.get("id")
+
+    if id:
+        print("id=" + str(id))
+        game = Game.objects.get(pk=id)
+
+        for field in body:
+            if hasattr(game, field) and field != "id":
+                value = body[field]
+                setattr(game, field, value)
+                print('setting "' + value + '" to the "' + field + '" field of id ' + body['id'])
+
+        game.save()
+    else:
+        id=1
+
+    return HttpResponseRedirect(reverse('games:detail', args=(body["id"],)))
 
 
 def _index_post(request):
@@ -164,16 +178,16 @@ def _generate_table(model, never_show_fields=[], sort_by="title"):
     return: a list that desribes a table. The first row has header info e.g.
     [
         [
-            {"title": "field1", "hide_button_show":False},
+            {"title": field1, "hide_button_show":False},
             ...
-            {"title": "fieldN", "hide_button_show":True}
+            {"title": fieldN, "hide_button_show":True}
         ]
-        [ model1_field1, ... model1_fieldN ]
+        {"id": 1, "data": [ {"name": field1, "value": model1_field1}, ...  ] }
         ...
-        [ modelM_field1, ... modelM_fieldN ]
+        {"id": M, "data": [ {"name": fieldM, "value": modelM_field1}, ... ] }
     """
     model_list = model.objects.all()
-    field_list = _fieds_visible()
+    field_list = _fields_visible()
     settings = _settings_get()
     fields_visible_always = _fields_visible_always()
 
@@ -191,17 +205,26 @@ def _generate_table(model, never_show_fields=[], sort_by="title"):
 
     # add all the rows
     table = []
+    col = 0
     for model_instance in model_list:
-        row = []
+        row = {}
+        row["id"] = model_instance.id
+        row["field"] = field_list[col:col+1]
+        data = []
         for field in field_list:
-            row.append(getattr(model_instance,field))
+            cell = {}
+            cell["name"] = field
+            cell["value"] = getattr(model_instance,field)
+            data.append(cell)
+        row["data"] = data
         table.append(row)
+        col += 1
 
     # sort the table
     if sort_by in field_list:
         i = field_list.index(sort_by)
         # ref for this magic: https://stackoverflow.com/questions/18411560/sort-list-while-pushing-none-values-to-the-end
-        table = sorted(table, key=lambda col: (col[i] is None, col[i]), reverse=settings.sort_reverse)
+        table = sorted(table, key=lambda row: (row["data"][i]["value"] is None, row["data"][i]["value"]), reverse=settings.sort_reverse)
 
     table = [header_list] + table
     return table
@@ -243,9 +266,13 @@ def submit(request):
 
 
 def detail(request, game_id):
-    if request.POST:
+    print("request.POST="+str(request.POST))
+    print("request.body="+str(request.body))
+    if request.method == 'POST':
+        print("!!! post exists !!!")
         response = _detail_post(request)
     else:
+        print("!!! post does NOT exist !!!")
         game = Game.objects.get(pk=game_id)
         context = {"game": game}
         response = render(request, 'games/detail.html', context)

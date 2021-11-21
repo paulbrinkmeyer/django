@@ -7,6 +7,7 @@ class Game(models.Model):
     platform = models.CharField(max_length=200)
     type = models.CharField(max_length=50, null=True)
     year = models.IntegerField(blank=True, null=True)
+    genre = models.CharField(max_length=200, null=True)
 
     def __str__(self):
         return str(self.id) + " - " + self.title + " - " + self.platform + " - " + self.provider
@@ -21,6 +22,7 @@ class Settings(models.Model):
     show_platform = models.BooleanField(default=True)
     show_type = models.BooleanField(default=True)
     show_year = models.BooleanField(default=True)
+    show_genre = models.BooleanField(default=True)
 
 
 class FieldVisibleAlways(models.Model):

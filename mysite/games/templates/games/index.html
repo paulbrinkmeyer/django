@@ -21,17 +21,17 @@
         {% endfor %}
 
     </tr></table>
-    
+    <div id="log">log</div>
+    {% csrf_token %}
     <table border=1>
         <tr>
             {% for header in table.0 %}
                 {% if header %}
                     <td>
                         <b>{{ header.title }}</b>
-
-                        {% if header.hide_button_show %}
-                            <br>
-                            <table><tr>
+                        <br>
+                        <table>
+                            <tr>
                                 <td><form action="{% url 'games:settings' %}" method="post" style="margin: 0px;">
                                     {% csrf_token %}
                                     <input type="hidden" name="sort_by" value="{{ header.title | lower }}">
@@ -44,26 +44,84 @@
                                     <input type="hidden" name="sort_reverse" value="true">
                                     <input type="submit" value="^">
                                 </form></td>
-                                <td><form action="{% url 'games:settings' %}" method="post" style="margin: 0px;">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="show_{{ header.title | lower }}" value="false">
-                                    <input type="submit" value="Hide">
-                                </form></td>
-                            </tr></table>
-                        {% endif %}
+                            </tr>
+                            {% if header.hide_button_show %}
+                                <tr>
+                                    <td colspan="2"><form action="{% url 'games:settings' %}" method="post" style="margin: 0px">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="show_{{ header.title | lower }}" value="false">
+                                        <input type="submit" value="Hide">
+                                    </form></td>
+                                </tr>
+                            {% endif %}
+                        </table>
                     </td>
                 {% endif %}
             {% endfor %}
         </tr>
         {% for row in table %}
             {% if not forloop.first %}
-                <tr>
-                    {% for field in row %}
-                        <td>{{ field }}</td>
-                    {% endfor %}
-                </tr>
+                <form action="{% url 'games:detail' row.id %}" method="post">
+                    <tr>
+                        {% for field in row.data %}
+                            <td>
+                                {% if field.name == "id" %}
+                                    <a href="{% url 'games:detail' row.id %}">{{ row.id }}</a>
+                                {% else %}
+
+                                    <input type="text"
+                                           size="{% if field.value|length == 0 %}1{% else %}{{ field.value|length }}{% endif %}"
+                                           id="{{ row.id }}.{{ field.name }}"
+                                           name="{{ field.name }}"
+                                           value="{{ field.value }}"
+                                           onblur="post_field( '{{ row.id }}', '{{ field.name }}' ,'{{ field.value }}' )"
+                                    >
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                </form>
             {% endif %}
         {% endfor %}
     </table>
 </body>
+
+<script>
+    function post_field(id, field, inital_value){
+        console.log("id=" + id + ", field=" + field + " inital_value=" + inital_value)
+        let cell_id = id + "." + field;
+        let new_value = document.getElementById(cell_id).value;
+        console.log("new_value=" + new_value);
+        if (inital_value != new_value){
+            console.log("new_value is different than the pervious value");
+            let payload = {}
+            payload["id"] = id
+            payload[field] = new_value
+            rest_post("{% url 'games:index' %}" + id, payload)
+            document.getElementById('log').innerHTML = "id=" + id + " field=" + field + ' changed to: "' + new_value + '"';
+            document.getElementById(cell_id).onblur = function onblur(event) {post_field( id, field , new_value )};
+        }
+        else{
+            console.log("new_value is the same as the pervious value");
+        }
+    }
+
+    function rest_post(url, data){
+        console.log("rest_post(" + url + "," + data + ") was called.")
+
+        fetch(
+            url,
+            {
+                headers: { "Content-Type": "application/json",
+                           "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value},
+                body: JSON.stringify(data),
+                method: "POST"
+            }
+        )
+        //.then(data => data.json())
+        //.then((json) => {
+        //    alert(JSON.stringify(json));
+        //});
+    }
+</script>
 </html>
