@@ -3,9 +3,17 @@ import json
 
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
+from django.template.defaulttags import register
 from django.urls import reverse
 
 from .models import FieldVisibleAlways, Game, Settings
+
+@register.filter
+def get_attr(object, key):
+    reponse = None
+    if hasattr(object, key):
+        response = getattr(object, key, None)
+    return response
 
 
 def _fields_get(model_instance):
@@ -30,7 +38,7 @@ def _fields_visible():
 
 
 def _fields_visible_always():
-    return_list = ["id"]
+    return_list = ["id", "title"]
     for field in FieldVisibleAlways.objects.all():
         return_list.append(field.name)
     return return_list
@@ -262,18 +270,19 @@ def settings(request):
 
 
 def submit(request):
-    return render(request, 'games/submit.html', {})  
+    return render(request, 'games/submit.html', {})
 
 
 def detail(request, game_id):
-    print("request.POST="+str(request.POST))
+    print("request.method="+str(request.method))
     print("request.body="+str(request.body))
     if request.method == 'POST':
-        print("!!! post exists !!!")
+        print("!!! POST detected !!!")
         response = _detail_post(request)
     else:
-        print("!!! post does NOT exist !!!")
+        print("!!! Not a POST detected !!!")
         game = Game.objects.get(pk=game_id)
-        context = {"game": game}
+        fields = list(set(_fields_get(game)) - set(["id"]))
+        context = {"game": game, "fields": fields}
         response = render(request, 'games/detail.html', context)
     return response
